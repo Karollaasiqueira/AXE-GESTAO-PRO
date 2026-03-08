@@ -1,0 +1,544 @@
+@echo off
+chcp 65001 >nul
+title AXÉ GESTÃO PRO - Completar Arquivos Faltantes
+color 0E
+
+echo ============================================
+echo  🏛️  AXÉ GESTÃO PRO - Completar Projeto
+echo ============================================
+echo.
+
+:: Definir caminho de instalacao
+set "INSTALL_PATH=C:\Users\karol\OneDrive\Área de Trabalho\PROJETOS\AXÉ GESTÃO PRO"
+
+echo 📂 Instalando em: %INSTALL_PATH%
+echo.
+
+:: Criar diretorios que faltam
+echo 📁 Criando pastas faltantes...
+
+if not exist "%INSTALL_PATH%\src" mkdir "%INSTALL_PATH%\src"
+if not exist "%INSTALL_PATH%\src\routes" mkdir "%INSTALL_PATH%\src\routes"
+if not exist "%INSTALL_PATH%\src\controllers" mkdir "%INSTALL_PATH%\src\controllers"
+if not exist "%INSTALL_PATH%\src\services" mkdir "%INSTALL_PATH%\src\services"
+if not exist "%INSTALL_PATH%\src\middlewares" mkdir "%INSTALL_PATH%\src\middlewares"
+if not exist "%INSTALL_PATH%\src\utils" mkdir "%INSTALL_PATH%\src\utils"
+if not exist "%INSTALL_PATH%\prisma" mkdir "%INSTALL_PATH%\prisma"
+if not exist "%INSTALL_PATH%\scripts" mkdir "%INSTALL_PATH%\scripts"
+if not exist "%INSTALL_PATH%\01-PROTOTIPO-VISUAL" mkdir "%INSTALL_PATH%\01-PROTOTIPO-VISUAL"
+if not exist "%INSTALL_PATH%\02-DOCUMENTACAO-API" mkdir "%INSTALL_PATH%\02-DOCUMENTACAO-API"
+if not exist "%INSTALL_PATH%\04-MODELO-NEGOCIO" mkdir "%INSTALL_PATH%\04-MODELO-NEGOCIO"
+if not exist "%INSTALL_PATH%\00-GUIA-INICIAL" mkdir "%INSTALL_PATH%\00-GUIA-INICIAL"
+
+echo ✅ Pastas criadas!
+echo.
+
+:: ============================================
+:: ARQUIVOS DO BACKEND (CRÍTICOS)
+:: ============================================
+
+echo 🔧 Criando arquivos do backend...
+
+:: 1. src/server.js (ARQUIVO PRINCIPAL - FALTANDO!)
+(
+echo const express = require('express'^);
+echo const cors = require('cors'^);
+echo const dotenv = require('dotenv'^);
+echo.
+echo const authRoutes = require('./routes/auth.routes'^);
+echo const { errorHandler } = require('./middlewares/errorHandler'^);
+echo.
+echo dotenv.config(^);
+echo.
+echo const app = express(^);
+echo const PORT = process.env.PORT ^|^| 3000;
+echo.
+echo app.use(cors(^)^);
+echo app.use(express.json(^)^);
+echo.
+echo app.use('/api/auth', authRoutes^);
+echo.
+echo app.get('/health', (req, res^) =^> {
+echo   res.json({ status: 'OK', timestamp: new Date(^).toISOString(^) }^);
+echo }^);
+echo.
+echo app.use(errorHandler^);
+echo.
+echo app.listen(PORT, (^) =^> {
+echo   console.log(`🚀 Servidor rodando na porta ${PORT}`^);
+echo   console.log(`📚 API: http://localhost:${PORT}`^);
+echo   console.log(`🔑 Auth: http://localhost:${PORT}/api/auth`^);
+echo }^);
+echo.
+echo module.exports = app;
+) > "%INSTALL_PATH%\src\server.js"
+echo    ✓ src/server.js [CRÍTICO]
+
+:: 2. src/routes/auth.routes.js (FALTANDO!)
+(
+echo const express = require('express'^);
+echo const router = express.Router(^);
+echo const authController = require('../controllers/auth.controller'^);
+echo.
+echo // POST /api/auth/login
+echo router.post('/login', authController.login^);
+echo.
+echo // POST /api/auth/register  
+echo router.post('/register', authController.register^);
+echo.
+echo // GET /api/auth/me (perfil do usuário logado^)
+echo router.get('/me', authController.getProfile^);
+echo.
+echo module.exports = router;
+) > "%INSTALL_PATH%\src\routes\auth.routes.js"
+echo    ✓ src/routes/auth.routes.js
+
+:: 3. src/controllers/auth.controller.js (FALTANDO!)
+(
+echo const bcrypt = require('bcryptjs'^);
+echo const jwt = require('jsonwebtoken'^);
+echo const { PrismaClient } = require('@prisma/client'^);
+echo.
+echo const prisma = new PrismaClient(^);
+echo.
+echo // Login de usuário
+echo exports.login = async (req, res^) =^> {
+echo   try {
+echo     const { email, password } = req.body;
+echo.
+echo     // Buscar usuário
+echo     const user = await prisma.user.findUnique({ 
+echo       where: { email } 
+echo     }^);
+echo.
+echo     if (!user^) {
+echo       return res.status(401^).json({ error: 'Credenciais inválidas' }^);
+echo     }
+echo.
+echo     // Verificar senha
+echo     const isValid = await bcrypt.compare(password, user.password^);
+echo     if (!isValid^) {
+echo       return res.status(401^).json({ error: 'Credenciais inválidas' }^);
+echo     }
+echo.
+echo     // Gerar token JWT
+echo     const token = jwt.sign(
+echo       { userId: user.id, role: user.role },
+echo       process.env.JWT_SECRET,
+echo       { expiresIn: process.env.JWT_EXPIRES_IN ^|^| '7d' }
+echo     ^);
+echo.
+echo     res.json({ 
+echo       token, 
+echo       user: { 
+echo         id: user.id, 
+echo         name: user.name, 
+echo         email: user.email, 
+echo         role: user.role 
+echo       } 
+echo     }^);
+echo.
+echo   } catch (error^) {
+echo     console.error('Erro no login:', error^);
+echo     res.status(500^).json({ error: 'Erro interno do servidor' }^);
+echo   }
+echo };
+echo.
+echo // Registro de novo usuário
+echo exports.register = async (req, res^) =^> {
+echo   try {
+echo     const { name, email, password, role = 'CLIENTE' } = req.body;
+echo.
+echo     // Validar email único
+echo     const existingUser = await prisma.user.findUnique({ 
+echo       where: { email } 
+echo     }^);
+echo.
+echo     if (existingUser^) {
+echo       return res.status(400^).json({ error: 'Email já cadastrado' }^);
+echo     }
+echo.
+echo     // Hash da senha
+echo     const hashedPassword = await bcrypt.hash(password, 10^);
+echo.
+echo     // Criar usuário
+echo     const user = await prisma.user.create({
+echo       data: { 
+echo         name, 
+echo         email, 
+echo         password: hashedPassword, 
+echo         role 
+echo       }
+echo     }^);
+echo.
+echo     res.status(201^).json({ 
+echo       message: 'Usuário criado com sucesso', 
+echo       userId: user.id 
+echo     }^);
+echo.
+echo   } catch (error^) {
+echo     console.error('Erro no registro:', error^);
+echo     res.status(500^).json({ error: 'Erro interno do servidor' }^);
+echo   }
+echo };
+echo.
+echo // Perfil do usuário logado
+echo exports.getProfile = async (req, res^) =^> {
+echo   try {
+echo     const userId = req.userId; // Vem do middleware de auth
+echo.
+echo     const user = await prisma.user.findUnique({
+echo       where: { id: userId },
+echo       select: { id: true, name: true, email: true, role: true, createdAt: true }
+echo     }^);
+echo.
+echo     if (!user^) {
+echo       return res.status(404^).json({ error: 'Usuário não encontrado' }^);
+echo     }
+echo.
+echo     res.json(user^);
+echo.
+echo   } catch (error^) {
+echo     res.status(500^).json({ error: error.message }^);
+echo   }
+echo };
+) > "%INSTALL_PATH%\src\controllers\auth.controller.js"
+echo    ✓ src/controllers/auth.controller.js
+
+:: 4. src/middlewares/errorHandler.js (FALTANDO!)
+(
+echo // Middleware de tratamento de erros
+echo exports.errorHandler = (err, req, res, next^) =^> {
+echo   console.error('💥 Erro:', err.stack^);
+echo.
+echo   // Erro de validação do Prisma
+echo   if (err.code ^&^& err.code.startsWith('P'^)^) {
+echo     return res.status(400^).json({ 
+echo       error: 'Erro de validação no banco de dados',
+echo       code: err.code
+echo     }^);
+echo   }
+echo.
+echo   // Erro JWT
+echo   if (err.name === 'JsonWebTokenError'^) {
+echo     return res.status(401^).json({ error: 'Token inválido' }^);
+echo   }
+echo.
+echo   if (err.name === 'TokenExpiredError'^) {
+echo     return res.status(401^).json({ error: 'Token expirado' }^);
+echo   }
+echo.
+echo   // Erro genérico
+echo   res.status(500^).json({ 
+echo     error: 'Erro interno do servidor',
+echo     message: process.env.NODE_ENV === 'development' ? err.message : undefined
+echo   }^);
+echo };
+) > "%INSTALL_PATH%\src\middlewares\errorHandler.js"
+echo    ✓ src/middlewares/errorHandler.js
+
+:: 5. src/middlewares/auth.js (FALTANDO! - Middleware de autenticação)
+(
+echo const jwt = require('jsonwebtoken'^);
+echo.
+echo // Middleware para verificar token JWT
+echo exports.authenticate = (req, res, next^) =^> {
+echo   try {
+echo     const authHeader = req.headers.authorization;
+echo.
+echo     if (!authHeader ^|^| !authHeader.startsWith('Bearer '^)^) {
+echo       return res.status(401^).json({ error: 'Token não fornecido' }^);
+echo     }
+echo.
+echo     const token = authHeader.substring(7^);
+echo     const decoded = jwt.verify(token, process.env.JWT_SECRET^);
+echo.
+echo     req.userId = decoded.userId;
+echo     req.userRole = decoded.role;
+echo.
+echo     next(^);
+echo.
+echo   } catch (error^) {
+echo     return res.status(401^).json({ error: 'Token inválido ou expirado' }^);
+echo   }
+echo };
+echo.
+echo // Middleware para verificar permissões
+echo exports.authorize = (...roles^) =^> {
+echo   return (req, res, next^) =^> {
+echo     if (!roles.includes(req.userRole^)^) {
+echo       return res.status(403^).json({ error: 'Acesso negado' }^);
+echo     }
+echo     next(^);
+echo   };
+echo };
+) > "%INSTALL_PATH%\src\middlewares\auth.js"
+echo    ✓ src/middlewares/auth.js
+
+:: ============================================
+:: ARQUIVOS DO BANCO DE DADOS (CRÍTICOS)
+:: ============================================
+
+echo.
+echo 🗄️  Criando arquivos do banco de dados...
+
+:: 6. prisma/schema.prisma (FALTANDO! - MODELO DO BANCO)
+(
+echo // This is your Prisma schema file,
+echo // learn more about it in the docs: https://pris.ly/d/prisma-schema
+echo.
+echo generator client {
+echo   provider = "prisma-client-js"
+echo }
+echo.
+echo datasource db {
+echo   provider = "postgresql"
+echo   url      = env("DATABASE_URL"^)
+echo }
+echo.
+echo // Usuários do sistema (Admin, Médium, Cliente^)
+echo model User {
+echo   id        String   @id @default(uuid(^)^)
+echo   email     String   @unique
+echo   password  String
+echo   name      String
+echo   role      Role     @default(CLIENTE^)
+echo   status    Boolean  @default(true^)
+echo   telefone  String?
+echo   createdAt DateTime @default(now(^)^)
+echo   updatedAt DateTime @updatedAt
+echo.
+echo   // Relacionamentos
+echo   agendamentosCliente Agendamento[] @relation("ClienteAgendamentos"^)
+echo   agendamentosMedium  Agendamento[] @relation("MediumAgendamentos"^)
+echo   pagamentos          Pagamento[]
+echo.
+echo   @@map("users"^)
+echo }
+echo.
+echo // Agendamentos de consultas/passistas
+echo model Agendamento {
+echo   id          String    @id @default(uuid(^)^)
+echo   clienteId   String
+echo   mediumId    String?
+echo   data        DateTime
+echo   tipo        TipoAgendamento
+echo   status      StatusAgendamento @default(PENDENTE^)
+echo   prioridade  Int       @default(0^) // 0=Não-sócio, 1=Co-suplente, 2=Sócio
+echo   confirmado  Boolean   @default(false^)
+echo   observacoes String?
+echo   createdAt   DateTime  @default(now(^)^)
+echo   updatedAt   DateTime  @updatedAt
+echo.
+echo   cliente     User      @relation("ClienteAgendamentos", fields: [clienteId], references: [id]^)
+echo   medium      User?     @relation("MediumAgendamentos", fields: [mediumId], references: [id]^)
+echo.
+echo   @@map("agendamentos"^)
+echo }
+echo.
+echo // Pagamentos (mensalidades e consultas^)
+echo model Pagamento {
+echo   id          String   @id @default(uuid(^)^)
+echo   userId      String
+echo   tipo        TipoPagamento
+echo   valor       Decimal  @db.Decimal(10, 2^)
+echo   status      StatusPagamento @default(PENDENTE^)
+echo   dataVencimento DateTime?
+echo   dataPagamento  DateTime?
+echo   metodo      String? // cartao, boleto, pix
+echo   transacaoId String? // ID da transação no gateway
+echo   createdAt   DateTime @default(now(^)^)
+echo   updatedAt   DateTime @updatedAt
+echo.
+echo   user        User     @relation(fields: [userId], references: [id]^)
+echo.
+echo   @@map("pagamentos"^)
+echo }
+echo.
+echo // Enums
+echo enum Role {
+echo   ADMIN
+echo   MEDIUM
+echo   CLIENTE
+echo }
+echo.
+echo enum TipoAgendamento {
+echo   CONSULTA
+echo   PASSISTA
+echo   GIRA
+echo }
+echo.
+echo enum StatusAgendamento {
+echo   PENDENTE
+echo   CONFIRMADO
+echo   CANCELADO
+echo   CONCLUIDO
+echo }
+echo.
+echo enum TipoPagamento {
+echo   MENSALIDADE
+echo   CONSULTA
+echo   DOACAO
+echo }
+echo.
+echo enum StatusPagamento {
+echo   PENDENTE
+echo   PAGO
+echo   CANCELADO
+echo   REEMBOLSADO
+echo }
+) > "%INSTALL_PATH%\prisma\schema.prisma"
+echo    ✓ prisma/schema.prisma [CRÍTICO]
+
+:: 7. scripts/seed.js (FALTANDO! - DADOS INICIAIS)
+(
+echo const { PrismaClient } = require('@prisma/client'^);
+echo const bcrypt = require('bcryptjs'^);
+echo.
+echo const prisma = new PrismaClient(^);
+echo.
+echo async function main(^) {
+echo   console.log('🌱 Iniciando seed...'^);
+echo   console.log('' ^);
+echo.
+echo   // Criar usuário ADMIN
+echo   console.log('👤 Criando ADMIN...'^);
+echo   const adminPassword = await bcrypt.hash('admin123', 10^);
+echo   const admin = await prisma.user.upsert({
+echo     where: { email: 'admin@terreiro.com' },
+echo     update: {},
+echo     create: {
+echo       email: 'admin@terreiro.com',
+echo       password: adminPassword,
+echo       name: 'Administrador do Sistema',
+echo       role: 'ADMIN',
+echo       status: true
+echo     }
+echo   }^);
+echo   console.log('✅ Admin criado:', admin.email^);
+echo.
+echo   // Criar MÉDIUM (Sócio^)
+echo   console.log('👤 Criando MÉDIUM...'^);
+echo   const mediumPassword = await bcrypt.hash('medium123', 10^);
+echo   const medium = await prisma.user.upsert({
+echo     where: { email: 'joao.silva@terreiro.com' },
+echo     update: {},
+echo     create: {
+echo       email: 'joao.silva@terreiro.com',
+echo       password: mediumPassword,
+echo       name: 'João Silva',
+echo       role: 'MEDIUM',
+echo       telefone: '11999999999',
+echo       status: true
+echo     }
+echo   }^);
+echo   console.log('✅ Médium criado:', medium.email^);
+echo.
+echo   // Criar CLIENTE de teste
+echo   console.log('👤 Criando CLIENTE...'^);
+echo   const clientPassword = await bcrypt.hash('cliente123', 10^);
+echo   const cliente = await prisma.user.upsert({
+echo     where: { email: 'maria@email.com' },
+echo     update: {},
+echo     create: {
+echo       email: 'maria@email.com',
+echo       password: clientPassword,
+echo       name: 'Maria Oliveira',
+echo       role: 'CLIENTE',
+echo       telefone: '11988888888',
+echo       status: true
+echo     }
+echo   }^);
+echo   console.log('✅ Cliente criado:', cliente.email^);
+echo.
+echo   console.log('' ^);
+echo   console.log('🎉 Seed concluído com sucesso!'^);
+echo   console.log('' ^);
+echo   console.log('🔑 CREDENCIAIS DE TESTE:'^);
+echo   console.log('   Admin:  admin@terreiro.com / admin123'^);
+echo   console.log('   Médium: joao.silva@terreiro.com / medium123'^);
+echo   console.log('   Cliente: maria@email.com / cliente123'^);
+echo }
+echo.
+echo main(^)
+echo   .catch((e^) =^> {
+echo     console.error('❌ Erro no seed:', e^);
+echo     process.exit(1^);
+echo   }^)
+echo   .finally(async (^) =^> {
+echo     await prisma.$disconnect(^);
+echo   }^);
+) > "%INSTALL_PATH%\scripts\seed.js"
+echo    ✓ scripts/seed.js
+
+:: ============================================
+:: ARQUIVOS DE DOCUMENTAÇÃO E PROTÓTIPO
+:: ============================================
+
+echo.
+echo 📚 Criando documentação e protótipos...
+
+:: 8. Protótipo HTML
+(
+echo ^<!DOCTYPE html^>
+echo ^<html lang="pt-BR"^>
+echo ^<head^>
+echo     ^<meta charset="UTF-8"^>
+echo     ^<meta name="viewport" content="width=device-width, initial-scale=1.0"^>
+echo     ^<title^>AXÉ GESTÃO PRO - Protótipo Interativo^</title^>
+echo     ^<style^>
+echo         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+echo         body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+echo         .container { max-width: 1200px; margin: 0 auto; }
+echo         .header { text-align: center; color: white; margin-bottom: 40px; padding: 20px; }
+echo         .header h1 { font-size: 3em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+echo         .header p { font-size: 1.2em; opacity: 0.9; }
+echo         .modules { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
+echo         .module { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s; cursor: pointer; }
+echo         .module:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
+echo         .module h3 { color: #667eea; margin-bottom: 15px; font-size: 1.5em; display: flex; align-items: center; gap: 10px; }
+echo         .module p { color: #666; line-height: 1.6; margin-bottom: 20px; }
+echo         .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: bold; transition: opacity 0.3s; border: none; cursor: pointer; }
+echo         .btn:hover { opacity: 0.9; transform: scale(1.05); }
+echo         .login-box { background: white; max-width: 400px; margin: 0 auto 40px; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+echo         .login-box h2 { color: #667eea; margin-bottom: 20px; text-align: center; }
+echo         .form-group { margin-bottom: 20px; }
+echo         .form-group label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; }
+echo         .form-group input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+echo         .form-group input:focus { outline: none; border-color: #667eea; }
+echo         .footer { text-align: center; color: white; margin-top: 40px; opacity: 0.8; }
+echo         .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+echo         .status.online { background: #4CAF50; }
+echo         .badge { background: #667eea; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px; }
+echo     ^</style^>
+echo ^</head^>
+echo ^<body^>
+echo     ^<div class="container"^>
+echo         ^<div class="header"^>
+echo             ^<h1^>🏛️ AXÉ GESTÃO PRO^</h1^>
+echo             ^<p^>Sistema de Gestão para Terreiros de Umbanda e Candomblé^</p^>
+echo             ^<span class="status online"^>^</span^> Sistema Online
+echo         ^</div^>
+echo.
+echo         ^<div class="login-box"^>
+echo             ^<h2^>🔐 Login^</h2^>
+echo             ^<div class="form-group"^>
+echo                 ^<label^>Email^</label^>
+echo                 ^<input type="email" placeholder="admin@terreiro.com"^>
+echo             ^</div^>
+echo             ^<div class="form-group"^>
+echo                 ^<label^>Senha^</label^>
+echo                 ^<input type="password" placeholder="••••••••"^>
+echo             ^</div^>
+echo             ^<button class="btn" style="width: 100%;"^>Entrar^</button^>
+echo             ^<p style="text-align: center; margin-top: 15px; color: #666; font-size: 0.9em;"^>
+echo                 Teste: admin@terreiro.com / admin123
+echo             ^</p^>
+echo         ^</div^>
+echo.
+echo         ^<div class="modules"^>
+echo             ^<div class="module"^>
+echo                 ^<h3^>📅 Agendamentos^</h3^>
+echo                 ^<p^>Gerencie consultas, passistas e giras com o Sistema O da Vez por prioridade.^</p^>
+echo                 ^<a href="#" class="btn"^>Acessar Módulo^</a^>
+echo             ^</div^
