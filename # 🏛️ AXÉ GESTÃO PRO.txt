@@ -1,0 +1,59 @@
+# 🏛️ AXÉ GESTÃO PRO
+
+**Sistema Completo de Gestão para Terreiros de Umbanda e Candomblé**
+
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Prisma](https://img.shields.io/badge/ORM-Prisma-2D3748.svg)](https://www.prisma.io/)
+
+---
+
+## ✨ Funcionalidades Principais
+
+### 🎯 Sistema de Agendamento
+- **3 Níveis de Acesso**: Sócio, Co-suplente, Não-sócio
+- **Sistema "O da Vez"**: Fila inteligente por prioridade
+- **Agendamento Direto**: Escolha de médium específico
+- **Confirmação via WhatsApp**: Automatização de lembretes
+
+### 💰 Gestão Financeira
+- Controle de mensalidades
+- Pagamento de consultas
+- Integração PagSeguro/Stripe
+- Relatórios financeiros
+
+### 📱 Comunicação
+- Notificações WhatsApp (Z-API)
+- Emails automáticos
+- Confirmação de presença em giras
+
+### 👥 Gestão de Pessoas
+- Cadastro de médiuns e clientes
+- Histórico de atendimentos
+- Frequência em giras
+
+---
+
+## 🚀 Instalação Rápida
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/Karollaasiqueira/AXE-GESTAO-PRO.git
+cd AXE-GESTAO-PRO
+
+# 2. Instale dependências
+npm install
+
+# 3. Configure o ambiente
+cp .env.example .env
+# Edite o .env com suas configurações
+
+# 4. Prepare o banco de dados
+npx prisma migrate dev --name init
+npx prisma generate
+
+# 5. Popule com dados de teste
+npm run seed
+
+# 6. Inicie o servidor
+npm run dev
