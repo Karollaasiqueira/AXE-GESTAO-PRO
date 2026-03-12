@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AXE GESTAO PRO - Sistema de Gestao</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ============ TELA DE LOGIN ============ -->
+  <div id="login-page" class="login-container">
+    <div class="login-box">
+      <h1>AXE GESTAO PRO</h1>
+      <p class="subtitle">Sistema de Gestao para Terreiros</p>
+
+      <div id="login-alert" class="alert alert-error"></div>
+      <div id="login-success" class="alert alert-success"></div>
+
+      <!-- FORMULARIO LOGIN -->
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="seu@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="login-password" placeholder="Sua senha" required>
+        </div>
+        <button type="submit" class="btn">Entrar</button>
+      </form>
+
+      <!-- FORMULARIO REGISTRO -->
+      <form id="register-form" style="display:none;">
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <input type="text" id="reg-name" placeholder="Seu nome" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="seu@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="reg-password" placeholder="Minimo 6 caracteres" required>
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="tel" id="reg-phone" placeholder="(11) 99999-9999">
+        </div>
+        <button type="submit" class="btn">Criar Conta</button>
+      </form>
+
+      <div class="toggle-form">
+        <span id="toggle-text">Nao tem conta?</span>
+        <a href="#" id="toggle-link" onclick="toggleForms()">Criar conta</a>
+      </div>
+
+      <div style="text-align:center; margin-top:16px; color:#aaa; font-size:0.8em;">
+        Teste: admin@terreiro.com / admin123
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <div id="dashboard-page" class="dashboard">
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <h2>AXE GESTAO PRO</h2>
+      <div class="user-info">
+        <span id="user-name" class="user-name"></span>
+        <span id="user-role" class="user-role"></span>
+        <button class="btn btn-small btn-danger" onclick="logout()">Sair</button>
+      </div>
+    </nav>
+
+    <!-- CONTEUDO -->
+    <div class="main-content">
+      <!-- BEM-VINDO -->
+      <div class="welcome-card">
+        <h2 id="welcome-msg">Bem-vindo!</h2>
+        <p>Painel de controle do sistema de gestao do terreiro.</p>
+      </div>
+
+      <!-- ESTATISTICAS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon purple">&#128197;</div>
+          <div class="stat-info">
+            <h3 id="stat-agendamentos">0</h3>
+            <p>Agendamentos</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">&#128100;</div>
+          <div class="stat-info">
+            <h3 id="stat-usuarios">0</h3>
+            <p>Usuarios</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">&#128176;</div>
+          <div class="stat-info">
+            <h3 id="stat-pagamentos">0</h3>
+            <p>Pagamentos</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">&#9989;</div>
+          <div class="stat-info">
+            <h3 id="stat-confirmados">0</h3>
+            <p>Confirmados</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULOS -->
+      <div class="modules-grid">
+        <div class="module-card" onclick="showSection('agendamentos')">
+          <div class="icon">&#128197;</div>
+          <h3>Agendamentos</h3>
+          <p>Gerencie consultas, passistas e giras com sistema de prioridade.</p>
+          <span class="badge">Ativo</span>
+        </div>
+
+        <div class="module-card" onclick="showSection('usuarios')">
+          <div class="icon">&#128101;</div>
+          <h3>Usuarios</h3>
+          <p>Cadastro e gerenciamento de mediums, clientes e administradores.</p>
+          <span class="badge">Ativo</span>
+        </div>
+
+        <div class="module-card">
+          <div class="icon">&#128176;</div>
+          <h3>Financeiro</h3>
+          <p>Controle de mensalidades, consultas e doacoes.</p>
+          <span class="badge soon">Em breve</span>
+        </div>
+
+        <div class="module-card">
+          <div class="icon">&#128202;</div>
+          <h3>Relatorios</h3>
+          <p>Relatorios e estatisticas do terreiro.</p>
+          <span class="badge soon">Em breve</span>
+        </div>
+      </div>
+
+      <!-- SECAO AGENDAMENTOS -->
+      <div id="section-agendamentos" style="display:none; margin-top:30px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="color:white;">Agendamentos</h2>
+          <div>
+            <button class="btn btn-small" onclick="showSection('home')">Voltar</button>
+            <button class="btn btn-small" onclick="openModal('agendamento')" style="margin-left:8px;">+ Novo</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Data</th>
+                <th>Prioridade</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="agendamentos-table">
+              <tr><td colspan="5" style="text-align:center; color:#888;">Nenhum agendamento cadastrado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECAO USUARIOS -->
+      <div id="section-usuarios" style="display:none; margin-top:30px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="color:white;">Usuarios</h2>
+          <button class="btn btn-small" onclick="showSection('home')">Voltar</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Perfil</th>
+                <th>Desde</th>
+              </tr>
+            </thead>
+            <tbody id="usuarios-table">
+              <tr><td colspan="4" style="text-align:center; color:#888;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL NOVO AGENDAMENTO ============ -->
+  <div id="modal-agendamento" class="modal-overlay">
+    <div class="modal">
+      <h2>Novo Agendamento</h2>
+      <form id="agendamento-form">
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="ag-tipo" required>
+            <option value="CONSULTA">Consulta</option>
+            <option value="PASSISTA">Passista</option>
+            <option value="GIRA">Gira</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data e Hora</label>
+          <input type="datetime-local" id="ag-data" required>
+        </div>
+        <div class="form-group">
+          <label>Observacoes</label>
+          <input type="text" id="ag-obs" placeholder="Observacoes (opcional)">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('agendamento')">Cancelar</button>
+          <button type="submit" class="btn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
