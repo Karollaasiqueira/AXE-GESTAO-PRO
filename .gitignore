@@ -28,5 +28,4 @@ Thumbs.db
 dist/
 build/
 
-# Prisma
-prisma/migrations/
+# Prisma (migrations are tracked for deploy)
