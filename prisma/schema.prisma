@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(CLIENTE)
+  status    Boolean  @default(true)
+  telefone  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agendamentosCliente Agendamento[] @relation("ClienteAgendamentos")
+  agendamentosMedium  Agendamento[] @relation("MediumAgendamentos")
+  pagamentos          Pagamento[]
+
+  @@map("users")
+}
+
+model Agendamento {
+  id          String             @id @default(uuid())
+  clienteId   String
+  mediumId    String?
+  data        DateTime
+  tipo        TipoAgendamento
+  status      StatusAgendamento  @default(PENDENTE)
+  prioridade  Int                @default(0)
+  confirmado  Boolean            @default(false)
+  observacoes String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  cliente     User               @relation("ClienteAgendamentos", fields: [clienteId], references: [id])
+  medium      User?              @relation("MediumAgendamentos", fields: [mediumId], references: [id])
+
+  @@map("agendamentos")
+}
+
+model Pagamento {
+  id             String          @id @default(uuid())
+  userId         String
+  tipo           TipoPagamento
+  valor          Decimal         @db.Decimal(10, 2)
+  status         StatusPagamento @default(PENDENTE)
+  dataVencimento DateTime?
+  dataPagamento  DateTime?
+  metodo         String?
+  transacaoId    String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id])
+
+  @@map("pagamentos")
+}
+
+enum Role {
+  ADMIN
+  MEDIUM
+  CLIENTE
+}
+
+enum TipoAgendamento {
+  CONSULTA
+  PASSISTA
+  GIRA
+}
+
+enum StatusAgendamento {
+  PENDENTE
+  CONFIRMADO
+  CANCELADO
+  CONCLUIDO
+}
+
+enum TipoPagamento {
+  MENSALIDADE
+  CONSULTA
+  DOACAO
+}
+
+enum StatusPagamento {
+  PENDENTE
+  PAGO
+  CANCELADO
+  REEMBOLSADO
+}
